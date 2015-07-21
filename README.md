@@ -6,8 +6,9 @@ Howdy clojure peeps! So we do a lot of statistics gathering in our codebase and 
 
 ## Usage
 
-```clojure
-[com.chartbeat/opentsdb "0.1"]
+``` Leiningen (Clojars - https://clojars.org/com.chartbeat.opentsdb)
+[com.chartbeat.opentsdb "0.1.2"]
+
 ```
 
 There are two ways to use the library, using a macro and using the api directly.
