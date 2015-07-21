@@ -55,7 +55,7 @@
     (catch IOException e
       (.printStackTrace e))))
 
-(defn send-line!
+(defn send-line
   "Sends a single line of text to a connection
   Returns false if the connection throw an exception.
   If you care about reliablity you can check the return and try to reconnect."
@@ -94,14 +94,14 @@
   (let [vec-tags (vectorify-tags tags)]
     (reduce conj default-tags vec-tags)))
 
-(defn send-metric!
+(defn send-metric
   "Sends an OpenTSDB metric to a connection."
   ([connection {:keys [metric timestamp value tags]}]
-   (send-metric! connection metric timestamp value tags))
+   (send-metric connection metric timestamp value tags))
   ([connection metric timestamp value tags]
    (let [full-str (serialize-metric metric timestamp value
                                     (merge-tags tags (:default-tags connection)))]
-     (send-line! connection full-str))))
+     (send-line connection full-str))))
 
 (defmacro with-opentsdb
  "Abstracts opening and closing an OpenTSDB connection.
@@ -114,5 +114,5 @@
                         (contains? opts# :out))
                    opts#
                    (open-connection! opts#))
-        ~'send! (partial send-metric! conn#)]
+        ~'send (partial send-metric conn#)]
      (do ~@body (close-connection! conn#))))

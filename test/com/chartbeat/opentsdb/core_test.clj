@@ -69,29 +69,29 @@
             (is (.isClosed socket)))
           (testing "successfully closes the OutputStreamWriter"
             (is (thrown? java.io.IOException (.write out "throwpls")))))))
-    (testing "send-line!"
+    (testing "send-line"
       (test-tcp (fn []
         (testing "properly writes to and flushes its writer"
           (let [connection (open-connection! "127.0.0.1:5000")
                 {:keys [mocked-conn state]} (mock-connection connection)]
-            (is (send-line! mocked-conn "what's up")) ; should return true if it's a good connection
+            (is (send-line mocked-conn "what's up")) ; should return true if it's a good connection
             (is (= "what's up\n" @(:written state)))
             (is @(:flushed state)))))))
-    (testing "send-metric!"
+    (testing "send-metric"
       (test-tcp
         (testing "properly writes to and flushes its writer"
           (let [connection (open-connection! "127.0.0.1:5000")
                 {:keys [mocked-conn state]} (mock-connection connection)
                 reset! #(swap! (:flushed state) (fn [old] false))]
-            (send-metric! mocked-conn "foo.bar" 1234 567.0 [["baz" "qux"]])
+            (send-metric mocked-conn "foo.bar" 1234 567.0 [["baz" "qux"]])
             (is (= "put foo.bar 1234 567.0 baz=qux\n" @(:written state)))
             (is @(:flushed state))
             (reset!)
-            (send-metric! mocked-conn "foo.bar" 1234 567.0 [{:name "baz" :value "qux"}])
+            (send-metric mocked-conn "foo.bar" 1234 567.0 [{:name "baz" :value "qux"}])
             (is (= "put foo.bar 1234 567.0 baz=qux\n" @(:written state)))
             (is @(:flushed state))
             (reset!)
-            (send-metric! mocked-conn "foo.bar" 1234 567.0 [["this" "has"]
+            (send-metric mocked-conn "foo.bar" 1234 567.0 [["this" "has"]
                                                    ["multiple" "tags"]])
             (is (= "put foo.bar 1234 567.0 multiple=tags this=has\n" @(:written state)))
             (is @(:flushed state))
@@ -102,17 +102,17 @@
                                           {:tags [{:name "foo" :value "bar"} {:name "boo" :value "zoob"}]})
              {:keys [mocked-conn state]} (mock-connection connection)
              reset! #(swap! (:flushed state) (fn [old] false))]
-         (send-metric! mocked-conn "foo.bar" 1234 567.0 [{:name "baz" :value "qux"}])
+         (send-metric mocked-conn "foo.bar" 1234 567.0 [{:name "baz" :value "qux"}])
          (is (= "put foo.bar 1234 567.0 foo=bar boo=zoob baz=qux\n" @(:written state))))))))
 
 (deftest test-with-opentsdb
   (testing "with-opentsdb macro"
     (test-tcp
-      (testing "properly sends metrics with send!"
+      (testing "properly sends metrics with send"
         (let [connection (open-connection! "127.0.0.1:5000")
               {:keys [mocked-conn state]} (mock-connection connection)]
           (with-opentsdb [mocked-conn]
-            (send! "foo.bar" 1234 567.0 [["baz" "qux"]]))
+            (send "foo.bar" 1234 567.0 [["baz" "qux"]]))
           (is (= "put foo.bar 1234 567.0 baz=qux\n" @(:written state))
 )
           (is @(:flushed state)))))))

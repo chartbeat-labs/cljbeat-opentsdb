@@ -15,7 +15,7 @@ The best source of inspiration is in `cb.cljbeat.opentsdb.example_usage.clj`.
 
 ## Using the Macro
 
-The macro allows you to wrap your metric calls in a typical `with-xxx` style. The connection is opened and closed in the macro. `send!` all of the metrics you want in this wrapper.
+The macro allows you to wrap your metric calls in a typical `with-xxx` style. The connection is opened and closed in the macro. `send` all of the metrics you want in this wrapper.
 
 It's pretty simple. Here's some example code that explains pretty much everything.
 ### Include it
@@ -29,8 +29,8 @@ It's pretty simple. Here's some example code that explains pretty much everythin
   "This will push some metrics to our actual OpenTSDB cluster. Sweet!"
   (let [now #(System/currentTimeMillis)]
     (with-opentsdb [{:host "metrics.chartbeat.net" :port 4242}]
-      (send! "test.clj-library" (now) 3.141 {"without" "hash"})
-      (send! {:metric "test.clj-library"
+      (send "test.clj-library" (now) 3.141 {"without" "hash"})
+      (send {:metric "test.clj-library"
               :timestamp (now)
               :value 1337
               :tags {"with" "hash"}}))))
@@ -38,9 +38,9 @@ It's pretty simple. Here's some example code that explains pretty much everythin
 ### Party
 Really, the only two things you need to know are:
 
-`with-opentsdb`: This is a macro that takes a config hash, opens a connection, exposes the `send!` function, and cleans up the connection when you're done.
+`with-opentsdb`: This is a macro that takes a config hash, opens a connection, exposes the `send` function, and cleans up the connection when you're done.
 
-`send!`: Spawns a `go` block that sends a metric over the opened telnet connection. If you're feeling terse, just pass the `metric` `timestamp` `value` `tags` in order. If you're feeling explicit, pass a hash with those keys. Up to you!
+`send`: Spawns a `go` block that sends a metric over the opened telnet connection. If you're feeling terse, just pass the `metric` `timestamp` `value` `tags` in order. If you're feeling explicit, pass a hash with those keys. Up to you!
 
 ## Using the API
 
@@ -55,7 +55,7 @@ Sometimes you might want to hold onto a connection at re-use it, I find this sty
 ```
     (let [client (tsdb/open-connection! "hbasemaster01" 4242)]
       (dotimes [_ 10]
-        (tsdb/send-metric! client "test.clj-library-dnd" (System/currentTimeMillis) 1337
+        (tsdb/send-metric client "test.clj-library-dnd" (System/currentTimeMillis) 1337
                       [{:name "type" :value "ogre"} {:name "event" :value "ready"}]))
       (tsdb/close-connection! client))
 ```
@@ -64,7 +64,7 @@ Sometimes you might want to hold onto a connection at re-use it, I find this sty
 ```
  (let [client (tsdb/open-connection! "hbasemaster01" 4242 {:tags [{:name "foo" :value "bar"}]})]
       (dotimes [_ 10]
-        (tsdb/send-metric! client "test.clj-library-dnd" (now) 1337
+        (tsdb/send-metric client "test.clj-library-dnd" (now) 1337
                       [{:name "type" :value "ogre"} {:name "event" :value "ready"}]))
       (tsdb/close-connection! client))
 ```
@@ -72,7 +72,6 @@ All of the recorded data will have foo=bar along with whatever other tags you ad
 
 ## Reliablity and Error handling
 Currently exceptions throw in connecting and sending data to opentsdb are printed to stderr. The send-metric! call returns true if it succeeds and false otherwise. It is up to you to decide to try to reconnect or not. This is a compromise between metrics being mission critical vs. "nice to have". In the future we hope to build up more comprehensive capabilities around connection handling.
-
 ## License
 
 BSD 3-clause
