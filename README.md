@@ -6,7 +6,7 @@ Howdy clojure peeps! So we do a lot of statistics gathering in our codebase and 
 
 ## Usage
 
-``` Leiningen (Clojars - https://clojars.org/com.chartbeat.opentsdb)
+```Leiningen (Clojars - https://clojars.org/com.chartbeat.opentsdb)
 [com.chartbeat.opentsdb "0.1.2"]
 
 ```
