@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [tcp-server "0.1.0"]]
   :deploy-repositories [["releases" :clojars]]
+  :signing {:gpg-key "F0903068"}
 
   :aot :all
   :profiles {:benchmark {:main com.chartbeat.opentsdb.example_usage}}
