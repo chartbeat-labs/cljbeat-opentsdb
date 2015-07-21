@@ -4,6 +4,8 @@ Clojure library for OpenTSDB
 
 Howdy clojure peeps! So we do a lot of statistics gathering in our codebase and we recently started using OpenTSDB as a repository for some of our data. We didn't see a clojure client library out there, so we wrote our own :) This is still fairly new and there are a lot of things we want to add to it, but we decided it was worth sharing with the world.
 
+This project is a part of [cljbeat](http://chartbeat-labs.github.io/cljbeat/).
+
 ## Usage
 
 Leiningen (Clojars - https://clojars.org/com.chartbeat.opentsdb)
