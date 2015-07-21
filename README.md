@@ -8,7 +8,7 @@ Howdy clojure peeps! So we do a lot of statistics gathering in our codebase and 
 
 Leiningen (Clojars - https://clojars.org/com.chartbeat.opentsdb)
 
-`[com.chartbeat.opentsdb "0.1.2"]`
+`[com.chartbeat.opentsdb "0.1.3"]`
 
 There are two ways to use the library, using a macro and using the api directly.
 The best source of inspiration is in `cb.cljbeat.opentsdb.example_usage.clj`.
