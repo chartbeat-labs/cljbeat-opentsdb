@@ -7,7 +7,8 @@
   (:import (java.net Socket)
            (java.io OutputStreamWriter)
            (java.io IOException))
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [clj-http.client :as http]))
 
 (def
   ^{:doc "Atom holding timing-since! timers."
@@ -108,6 +109,18 @@
    (let [full-str (serialize-metric metric timestamp value
                                     (merge-tags tags (:default-tags connection)))]
      (send-line connection full-str))))
+
+(defn send-metrics-http
+  "Sends a batch of metrics over http. The metrics argument should be
+   an iterable of maps the following keys: metric, timestamp, value, tags."
+  ([server port metrics]
+   (let [url (format "%s%s:%s/api/put"
+                     (if (re-find #"://" server)
+                       ""
+                       "http://")  ;; prepend http:// if it's not already there
+                     server port)]
+     (http/post url {:form-params metrics
+                     :content-type :json}))))
 
 (defmacro with-opentsdb
  "Abstracts opening and closing an OpenTSDB connection.

@@ -27,7 +27,7 @@
   "Sets up and tears down a tcp server for the purpose of testing connection code"
   `(let [handler# (fn [reader# writer#] nil)
          server# (tcp/tcp-server :port 5000
-                               :handler (tcp/wrap-io handler#))]
+                                 :handler (tcp/wrap-io handler#))]
       (do (tcp/start server#)
           ~@tests
           (tcp/stop server#))))

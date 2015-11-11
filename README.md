@@ -54,12 +54,24 @@ Sometimes you might want to hold onto a connection at re-use it, I find this sty
   (:require [cb.cljbeat.opentsdb.core :as tsdb]))
 ```
 ### Use it
+Use a tcp client
 ```
     (let [client (tsdb/open-connection! "metrics.chartbeat.net" 4242)]
       (dotimes [_ 10]
         (tsdb/send-metric client "test.clj-library-dnd" (System/currentTimeMillis) 1337
                       [{:name "type" :value "ogre"} {:name "event" :value "ready"}]))
       (tsdb/close-connection! client))
+```
+Or send batch metrics over http
+```
+    (tsdb/send-metrics-http "metrics.chartbeat.net" 4080 [{:metric "foo"
+                                                           :timestamp (System/currentTimeMillis)
+                                                           :value 1
+                                                           :tags {:host "localhost"
+                                                                  :group "test-group"}}
+                                                          {:metric "bar"
+                                                           :timestamp (System/currentTimeMillis)
+                                                           :value 2}])
 ```
 
 ### Set default tags on your connection
