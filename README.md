@@ -55,7 +55,7 @@ Sometimes you might want to hold onto a connection at re-use it, I find this sty
 ```
 ### Use it
 ```
-    (let [client (tsdb/open-connection! "hbasemaster01" 4242)]
+    (let [client (tsdb/open-connection! "metrics.chartbeat.net" 4242)]
       (dotimes [_ 10]
         (tsdb/send-metric client "test.clj-library-dnd" (System/currentTimeMillis) 1337
                       [{:name "type" :value "ogre"} {:name "event" :value "ready"}]))
@@ -64,7 +64,7 @@ Sometimes you might want to hold onto a connection at re-use it, I find this sty
 
 ### Set default tags on your connection
 ```
- (let [client (tsdb/open-connection! "hbasemaster01" 4242 {:tags [{:name "foo" :value "bar"}]})]
+ (let [client (tsdb/open-connection! "metrics.chartbeat.net" 4242 {:tags [{:name "foo" :value "bar"}]})]
       (dotimes [_ 10]
         (tsdb/send-metric client "test.clj-library-dnd" (now) 1337
                       [{:name "type" :value "ogre"} {:name "event" :value "ready"}]))
@@ -74,6 +74,29 @@ All of the recorded data will have foo=bar along with whatever other tags you ad
 
 ## Reliablity and Error handling
 Currently exceptions throw in connecting and sending data to opentsdb are printed to stderr. The send-metric! call returns true if it succeeds and false otherwise. It is up to you to decide to try to reconnect or not. This is a compromise between metrics being mission critical vs. "nice to have". In the future we hope to build up more comprehensive capabilities around connection handling.
+
+## Time Metrics
+
+There are two ways of measuring elapsed time:
+
+`with-timing` is a macro that will report the time to execute all the
+expressions in its body:
+```clojure
+(let [client (tsdb/open-connection! "metrics.chartbeat.net" 4242)]
+  (with-timing! client "some_timing_metric" [["tag" "value"]]
+    (do-some-stuff)))
+```
+
+`timing-since!` is a function that will report the time between calls to it.
+The last time executed is stored in a top level atom.
+```clojure
+(let [client (tsdb/open-connection! "metrics.chartbeat.net" 4242)]
+  (timing-since! client \"foo\" []) ;; nothing happens, first time foo was reported
+  (timing-since! client \"foo\" []) ;; time since first foo call is reported
+  (timing-since! client \"bar\" []) ;; nothing happens, first time bar was reported
+  (timing-since! client \"foo\" []) ;; time since second foo call is reported
+```
+
 ## License
 
 BSD 3-clause

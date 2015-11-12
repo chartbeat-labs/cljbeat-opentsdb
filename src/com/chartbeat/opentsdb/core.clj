@@ -9,6 +9,12 @@
            (java.io IOException))
   (:require [clojure.string :as string]))
 
+(def
+  ^{:doc "Atom holding timing-since! timers."
+    :private true}
+  timing-since-timers
+  (atom {}))
+
 (defn- vectorify-tags
   "If the tags are in map format, tranform to vector form"
   [tags]
@@ -105,7 +111,8 @@
 
 (defmacro with-opentsdb
  "Abstracts opening and closing an OpenTSDB connection.
-  If connection is passed as first param it is used, otherwise assumes connect string in format host:port
+  If connection is passed as first param it is used, otherwise assumes connect
+  string in format host:port
   @TODO allow for passing option map with connection string."
   [config & body]
   `(let [opts# (first ~config)
@@ -116,3 +123,43 @@
                    (open-connection! opts#))
         ~'send (partial send-metric conn#)]
      (do ~@body (close-connection! conn#))))
+
+(defn milli-time [] (System/currentTimeMillis))
+
+(defmacro with-timing
+  "Report the time to compete the body of expressions to OpenTSDB.
+
+  Example:
+  (with-timing open-tsdb-client \"time-to-do-something\"
+    ...)"
+  [client metric-name tags & body]
+  `(let [start-time# (milli-time)
+         result# (do ~@body)]
+     (send-metric ~client
+                  ~metric-name
+                  (milli-time)
+                  (- (milli-time) start-time#)
+                  ~tags)
+     result#))
+
+(defn timing-since!
+  "Every time this function is called with a key k, it reports time since the
+  last time it was called with that key to OpenTSDB.
+
+  Example:
+  (timing-since! client \"foo\" []) ;; nothing happens, first time foo was reported
+  (timing-since! client \"foo\" []) ;; time since first foo call is reported
+  (timing-since! client \"bar\" []) ;; nothing happens, first time bar was reported
+  (timing-since! client \"foo\" []) ;; time since second foo call is reported"
+  [client k tags]
+  (let [now (milli-time)]
+    (swap!
+      timing-since-timers
+      (fn [timers]
+         (if-let [last-time (get timers k)]
+           (send-metric client
+                        k
+                        (milli-time)
+                        (- (milli-time) last-time)
+                        tags))
+         (assoc timers k now)))))

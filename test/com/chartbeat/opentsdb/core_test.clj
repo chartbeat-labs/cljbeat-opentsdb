@@ -1,7 +1,8 @@
 (ns com.chartbeat.opentsdb.core-test
   (:require [clojure.test :refer :all]
             [com.chartbeat.opentsdb.core :refer :all]
-            [net.tcp.server :as tcp]))
+            [net.tcp.server :as tcp]
+            [clojure.string :refer [trim]]))
 
 ;; Testing pure functions first
 
@@ -98,7 +99,7 @@
             (reset!)))))
     (testing "default-tags!"
       (test-tcp
-       (let [connection (open-connection! "127.0.0.1" 5000 
+       (let [connection (open-connection! "127.0.0.1" 5000
                                           {:tags [{:name "foo" :value "bar"} {:name "boo" :value "zoob"}]})
              {:keys [mocked-conn state]} (mock-connection connection)
              reset! #(swap! (:flushed state) (fn [old] false))]
@@ -113,13 +114,32 @@
               {:keys [mocked-conn state]} (mock-connection connection)]
           (with-opentsdb [mocked-conn]
             (send "foo.bar" 1234 567.0 [["baz" "qux"]]))
-          (is (= "put foo.bar 1234 567.0 baz=qux\n" @(:written state))
-)
+          (is (= "put foo.bar 1234 567.0 baz=qux\n" @(:written state)))
           (is @(:flushed state)))))))
 
+(deftest test-timing-since
+  (testing "timing-since! macro"
+    (test-tcp
+      (let [current-time-stamp (atom 0)
+            connection (open-connection! "127.0.0.1:5000")
+            {:keys [mocked-conn state]} (mock-connection connection)]
+        (with-redefs [milli-time (fn [] @current-time-stamp)]
+          (swap! current-time-stamp + 1000)
+          (timing-since! mocked-conn "foo" [["baz" "qux"]])
+          (swap! current-time-stamp + 1000)
+          (timing-since! mocked-conn "foo" [["baz" "qux"]])
+          (is (= "put foo 2000 1000.0 baz=qux" (trim @(:written state))))
+          (swap! current-time-stamp + 1000)
+          (timing-since! mocked-conn "foo" [["baz" "qux"]])
+          (is (= "put foo 3000 1000.0 baz=qux" (trim @(:written state)))))))))
 
-
-
-
-
-
+(deftest test-with-timing
+  (testing "with-timing macro"
+    (test-tcp
+      (let [current-time-stamp (atom 1234)
+            connection (open-connection! "127.0.0.1:5000")
+            {:keys [mocked-conn state]} (mock-connection connection)]
+        (with-redefs [milli-time (fn [] @current-time-stamp)]
+          (with-timing mocked-conn "foo" [["baz" "qux"]]
+            (swap! current-time-stamp + 1000))
+          (is (= "put foo 2234 1000.0 baz=qux" (trim @(:written state)))))))))
