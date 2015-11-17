@@ -11,7 +11,11 @@
     (testing "should serialize the vector form"
       (is (= "foo=bar" (serialize-tag ["foo" "bar"]))))
     (testing "should serialize the hash form"
-      (is (= "foo=bar" (serialize-tag {:name "foo" :value "bar"})))))
+      (is (= "foo=bar" (serialize-tag {:name "foo" :value "bar"}))))
+    (testing "should serialize the map form"
+      (is (= "foo=bar" (first (map serialize-tag {"foo" "bar"})))))
+    (testing "should serialize the keyword map form"
+      (is (= "foo=bar" (first (map serialize-tag {:foo "bar"}))))))
   (testing "serialize-metric"
     (testing "should correctly serialize a given put"
       (is (= "put foo.bar 1234 567.0 baz=qux"

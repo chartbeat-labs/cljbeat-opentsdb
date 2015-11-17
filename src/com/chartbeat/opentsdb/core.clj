@@ -95,7 +95,7 @@
   (let [serialize (fn [name value] (format "%s=%s", name, value))]
     (if (map? tag) ;; TODO MORE VALIDATION
       (serialize (:name tag) (:value tag))
-      (serialize (first tag) (second tag)))))
+      (serialize (name (first tag)) (second tag)))))
 
 (defn serialize-metric
   "Serializes a single metric put into a string"
