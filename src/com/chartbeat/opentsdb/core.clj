@@ -8,6 +8,7 @@
            (java.io OutputStreamWriter)
            (java.io IOException))
   (:require [clojure.string :as string]
+            [clojure.java.io :as io]
             [clj-http.client :as http]))
 
 (def
@@ -38,7 +39,9 @@
     (let [socket (Socket. (:host connection) (:port connection))]
       (.setSoTimeout socket 1000)
       (.setKeepAlive socket true)
-      (conj connection {:socket socket :out (OutputStreamWriter. (.getOutputStream socket))}))
+      (conj connection {:socket socket
+                        :out (io/writer socket)
+                        :in (io/reader socket)}))
     (catch Exception e
       (.printStackTrace e)
       connection)))
@@ -57,7 +60,7 @@
   "Closes and cleans up a connection."
   [connection]
   (try
-    (.close ^OutputStreamWriter (:out connection))
+    (.close (:out connection))
     (.close ^Socket (:socket connection))
     (catch IOException e
       (.printStackTrace e))))
@@ -67,10 +70,13 @@
   Returns false if the connection throw an exception.
   If you care about reliablity you can check the return and try to reconnect."
   [connection line]
-  (let [out (:out connection)]
+  (let [out (:out connection)
+        in (:in connection)]
     (try
-      (.write ^OutputStreamWriter out ^String (str line "\n"))
-      (.flush ^OutputStreamWriter out)
+      (.write out ^String (str line "\n"))
+      (.flush out)
+      (while (.ready in)
+        (.readLine in))
       true
       (catch Exception e
         (.printStackTrace e)
