@@ -76,6 +76,11 @@
         (.printStackTrace e)
         false))))
 
+(defn send-lines
+  "Send multiple lines of text in a single batch to a connection."
+  [connection lines]
+  (send-line connection (string/join "\n" lines)))
+
 ;; TODO The map should already be flattened to a vector of tags by this point,
 ;; but keeping this around for now there should be no need to flatten it here
 (defn serialize-tag
@@ -110,6 +115,19 @@
                                     (merge-tags tags (:default-tags connection)))]
      (send-line connection full-str))))
 
+(defn send-metrics
+  "Sends a collection of metrics to a connection."
+  [connection metrics]
+  (send-lines connection
+              (map (fn [metric]
+                     (let [[metric-name timestamp value tags]
+                           (if (map? metric)
+                             (map metric [:metric :timestamp :value :tags])
+                             metric)]
+                       (serialize-metric metric-name timestamp value
+                                         (merge-tags tags (:default-tags connection)))))
+                   metrics)))
+
 (defn send-metrics-http
   "Sends a batch of metrics over http. The metrics argument should be
    an iterable of maps the following keys: metric, timestamp, value, tags."
@@ -134,7 +152,8 @@
                         (contains? opts# :out))
                    opts#
                    (open-connection! opts#))
-        ~'send (partial send-metric conn#)]
+         ~'send (partial send-metric conn#)
+         ~'send-batch (partial send-metrics conn#)]
      (do ~@body (close-connection! conn#))))
 
 (defn milli-time [] (System/currentTimeMillis))

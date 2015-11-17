@@ -35,7 +35,9 @@ It's pretty simple. Here's some example code that explains pretty much everythin
       (send {:metric "test.clj-library"
               :timestamp (now)
               :value 1337
-              :tags {"with" "hash"}}))))
+              :tags {"with" "hash"}})
+      (send-batch [["test.clj-library" (now) 42 {"in" "batch"}]
+                   ["test.clj-batching" (now) 3 {"in" "batch"}]]))))
 ```
 ### Party
 Really, the only two things you need to know are:
@@ -43,6 +45,8 @@ Really, the only two things you need to know are:
 `with-opentsdb`: This is a macro that takes a config hash, opens a connection, exposes the `send` function, and cleans up the connection when you're done.
 
 `send`: Spawns a `go` block that sends a metric over the opened telnet connection. If you're feeling terse, just pass the `metric` `timestamp` `value` `tags` in order. If you're feeling explicit, pass a hash with those keys. Up to you!
+
+`send-batch`: Same as send, but for sending multiple metrics in a single request.
 
 ## Using the API
 
@@ -60,6 +64,9 @@ Use a tcp client
       (dotimes [_ 10]
         (tsdb/send-metric client "test.clj-library-dnd" (System/currentTimeMillis) 1337
                       [{:name "type" :value "ogre"} {:name "event" :value "ready"}]))
+      (tsdb/send-metrics client [["test.clj-library-dnd" (System/currentTimeMillis) 10003 {"type" "goblin"}]
+                                 ["test.clj-library-dnd" (System/currentTimeMillis) 9001 {"type" "demon"}]
+                                 ["test.clj-library-dnd" (System/currentTimeMillis) 1 {"type" "necromancer"}]])
       (tsdb/close-connection! client))
 ```
 Or send batch metrics over http
