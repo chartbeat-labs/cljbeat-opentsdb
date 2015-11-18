@@ -1,4 +1,4 @@
-(defproject com.chartbeat.opentsdb "0.2.0"
+(defproject com.chartbeat.opentsdb "0.2.1"
   :description "Simple lil' clojure library for OpenTSDB"
   :url "https://github.com/chartbeat-labs/cljbeat-opentsdb"
   :license {:name "BSD 3 Clause"
