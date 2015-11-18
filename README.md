@@ -10,7 +10,7 @@ This project is a part of [cljbeat](http://chartbeat-labs.github.io/cljbeat/).
 
 Leiningen (Clojars - https://clojars.org/com.chartbeat.opentsdb)
 
-`[com.chartbeat.opentsdb "0.1.3"]`
+`[com.chartbeat.opentsdb "0.2.1"]`
 
 There are two ways to use the library, using a macro and using the api directly.
 The best source of inspiration is in `cb.cljbeat.opentsdb.example_usage.clj`.
